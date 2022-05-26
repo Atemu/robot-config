@@ -1,0 +1,64 @@
+From 19ac998991a2e01b317fc16a8e9ee2b56f77f015 Mon Sep 17 00:00:00 2001
+From: Atemu <atemu.main@gmail.com>
+Date: Thu, 26 May 2022 19:35:51 +0200
+Subject: [PATCH] always have screenOrientation =
+ SCREEN_ORIENTATION_UNSPECIFIED
+
+Or at least try to
+---
+ core/java/android/content/pm/ActivityInfo.java                | 4 ++--
+ .../content/pm/parsing/component/ParsedActivityUtils.java     | 2 +-
+ .../java/com/android/server/wm/ActivityClientController.java  | 2 +-
+ 3 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/core/java/android/content/pm/ActivityInfo.java b/core/java/android/content/pm/ActivityInfo.java
+index d1ef5917..b0342448 100644
+--- a/core/java/android/content/pm/ActivityInfo.java
++++ b/core/java/android/content/pm/ActivityInfo.java
+@@ -1213,7 +1213,7 @@ public class ActivityInfo extends ComponentInfo implements Parcelable {
+         targetActivity = orig.targetActivity;
+         flags = orig.flags;
+         privateFlags = orig.privateFlags;
+-        screenOrientation = orig.screenOrientation;
++        // screenOrientation = orig.screenOrientation; // skip
+         configChanges = orig.configChanges;
+         softInputMode = orig.softInputMode;
+         uiOptions = orig.uiOptions;
+@@ -1701,7 +1701,7 @@ public class ActivityInfo extends ComponentInfo implements Parcelable {
+         launchToken = source.readString8();
+         flags = source.readInt();
+         privateFlags = source.readInt();
+-        screenOrientation = source.readInt();
++        source.readInt(); //screenOrientation = source.readInt(); // skip so that it's left on default
+         configChanges = source.readInt();
+         softInputMode = source.readInt();
+         uiOptions = source.readInt();
+diff --git a/core/java/android/content/pm/parsing/component/ParsedActivityUtils.java b/core/java/android/content/pm/parsing/component/ParsedActivityUtils.java
+index 92a90e98..1beddc85 100644
+--- a/core/java/android/content/pm/parsing/component/ParsedActivityUtils.java
++++ b/core/java/android/content/pm/parsing/component/ParsedActivityUtils.java
+@@ -170,7 +170,7 @@ public class ParsedActivityUtils {
+ 
+                 int screenOrientation = sa.getInt(R.styleable.AndroidManifestActivity_screenOrientation, SCREEN_ORIENTATION_UNSPECIFIED);
+                 int resizeMode = getActivityResizeMode(pkg, sa, screenOrientation);
+-                activity.screenOrientation = screenOrientation;
++                activity.screenOrientation = SCREEN_ORIENTATION_UNSPECIFIED; // Stubbed!
+                 activity.resizeMode = resizeMode;
+ 
+                 if (sa.hasValue(R.styleable.AndroidManifestActivity_maxAspectRatio)
+diff --git a/services/core/java/com/android/server/wm/ActivityClientController.java b/services/core/java/com/android/server/wm/ActivityClientController.java
+index ee72fc86..dd02aad3 100644
+--- a/services/core/java/com/android/server/wm/ActivityClientController.java
++++ b/services/core/java/com/android/server/wm/ActivityClientController.java
+@@ -636,7 +636,7 @@ class ActivityClientController extends IActivityClientController.Stub {
+             synchronized (mGlobalLock) {
+                 final ActivityRecord r = ActivityRecord.isInRootTaskLocked(token);
+                 if (r != null) {
+-                    r.setRequestedOrientation(requestedOrientation);
++                    r.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED); // Stubbed!
+                 }
+             }
+         } finally {
+-- 
+2.36.0
+

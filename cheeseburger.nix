@@ -4,5 +4,5 @@
   ];
 
   device = "cheeseburger";
-  androidVersion = 11;
+  androidVersion = 12;
 }

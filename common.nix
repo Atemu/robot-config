@@ -1,3 +1,5 @@
+{ config, lib, ... }:
+
 {
   flavor = "lineageos";
 
@@ -5,5 +7,7 @@
 
   microg.enable = true;
 
-  source.dirs."frameworks/base".patches = [ ./0001-always-have-screenOrientation-SCREEN_ORIENTATION_UNS.patch ];
+  source.dirs."frameworks/base".patches = lib.mkIf (config.androidVersion == 12) [
+    ./0001-always-have-screenOrientation-SCREEN_ORIENTATION_UNS.patch
+  ];
 }

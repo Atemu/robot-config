@@ -1,20 +1,24 @@
-From 47c567b604c5cf3939691f087b6141bdb971b4da Mon Sep 17 00:00:00 2001
+From 4411a876b9e4776db22838d0948f3f92fdd7343a Mon Sep 17 00:00:00 2001
 From: Atemu <atemu.main@gmail.com>
 Date: Thu, 26 May 2022 19:35:51 +0200
 Subject: [PATCH] always have screenOrientation =
  SCREEN_ORIENTATION_UNSPECIFIED
 
 ---
- core/java/android/content/pm/ActivityInfo.java                | 4 ++--
- .../android/server/pm/pkg/component/ParsedActivityUtils.java  | 2 +-
- .../java/com/android/server/wm/ActivityClientController.java  | 2 +-
- 3 files changed, 4 insertions(+), 4 deletions(-)
+ core/java/android/content/pm/ActivityInfo.java        |  4 ++--
+ core/java/android/content/pm/PackageParser.java       |  6 ++----
+ core/java/android/view/WindowManager.java             |  5 +++--
+ .../server/pm/pkg/component/ParsedActivityImpl.java   | 11 ++++++-----
+ .../server/pm/pkg/component/ParsedActivityUtils.java  |  2 +-
+ .../pm/pkg/parsing/PackageInfoWithoutStateUtils.java  |  2 +-
+ .../android/server/wm/ActivityClientController.java   |  2 +-
+ 7 files changed, 16 insertions(+), 16 deletions(-)
 
 diff --git a/core/java/android/content/pm/ActivityInfo.java b/core/java/android/content/pm/ActivityInfo.java
-index 9e5e8deda84b..ab6ee6167912 100644
+index 319f1298a87f..fa5b32a08ef5 100644
 --- a/core/java/android/content/pm/ActivityInfo.java
 +++ b/core/java/android/content/pm/ActivityInfo.java
-@@ -1320,7 +1320,7 @@ public class ActivityInfo extends ComponentInfo implements Parcelable {
+@@ -1493,7 +1493,7 @@ public class ActivityInfo extends ComponentInfo implements Parcelable {
          targetActivity = orig.targetActivity;
          flags = orig.flags;
          privateFlags = orig.privateFlags;
@@ -23,7 +27,7 @@ index 9e5e8deda84b..ab6ee6167912 100644
          configChanges = orig.configChanges;
          softInputMode = orig.softInputMode;
          uiOptions = orig.uiOptions;
-@@ -1822,7 +1822,7 @@ public class ActivityInfo extends ComponentInfo implements Parcelable {
+@@ -2006,7 +2006,7 @@ public class ActivityInfo extends ComponentInfo implements Parcelable {
          launchToken = source.readString8();
          flags = source.readInt();
          privateFlags = source.readInt();
@@ -32,6 +36,103 @@ index 9e5e8deda84b..ab6ee6167912 100644
          configChanges = source.readInt();
          softInputMode = source.readInt();
          uiOptions = source.readInt();
+diff --git a/core/java/android/content/pm/PackageParser.java b/core/java/android/content/pm/PackageParser.java
+index c01e30ded50e..18745387d8d6 100644
+--- a/core/java/android/content/pm/PackageParser.java
++++ b/core/java/android/content/pm/PackageParser.java
+@@ -4463,9 +4463,7 @@ public class PackageParser {
+                 a.info.flags |= ActivityInfo.FLAG_RESUME_WHILE_PAUSING;
+             }
+ 
+-            a.info.screenOrientation = sa.getInt(
+-                    R.styleable.AndroidManifestActivity_screenOrientation,
+-                    SCREEN_ORIENTATION_UNSPECIFIED);
++            a.info.screenOrientation = SCREEN_ORIENTATION_UNSPECIFIED; // Hacked!
+ 
+             setActivityResizeMode(a.info, sa, owner);
+ 
+@@ -4945,7 +4943,7 @@ public class PackageParser {
+         if (info.descriptionRes == 0) {
+             info.descriptionRes = target.info.descriptionRes;
+         }
+-        info.screenOrientation = target.info.screenOrientation;
++        info.screenOrientation = SCREEN_ORIENTATION_UNSPECIFIED; // Hacked!
+         info.taskAffinity = target.info.taskAffinity;
+         info.theme = target.info.theme;
+         info.softInputMode = target.info.softInputMode;
+diff --git a/core/java/android/view/WindowManager.java b/core/java/android/view/WindowManager.java
+index 6c595e93dd46..1563aa0d91ee 100644
+--- a/core/java/android/view/WindowManager.java
++++ b/core/java/android/view/WindowManager.java
+@@ -4448,7 +4448,8 @@ public interface WindowManager extends ViewManager {
+             mWindowContextToken = in.readStrongBinder();
+             packageName = in.readString();
+             mTitle = TextUtils.CHAR_SEQUENCE_CREATOR.createFromParcel(in);
+-            screenOrientation = in.readInt();
++            // screenOrientation = in.readInt();
++            in.readInt(); // Stubbed!
+             preferredRefreshRate = in.readFloat();
+             preferredDisplayModeId = in.readInt();
+             preferredMinDisplayRefreshRate = in.readFloat();
+@@ -4649,7 +4650,7 @@ public interface WindowManager extends ViewManager {
+             }
+ 
+             if (screenOrientation != o.screenOrientation) {
+-                screenOrientation = o.screenOrientation;
++                screenOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED; // Hacked!
+                 changes |= SCREEN_ORIENTATION_CHANGED;
+             }
+ 
+diff --git a/services/core/java/com/android/server/pm/pkg/component/ParsedActivityImpl.java b/services/core/java/com/android/server/pm/pkg/component/ParsedActivityImpl.java
+index acd5a813e32f..4a3e4ff3e4a5 100644
+--- a/services/core/java/com/android/server/pm/pkg/component/ParsedActivityImpl.java
++++ b/services/core/java/com/android/server/pm/pkg/component/ParsedActivityImpl.java
+@@ -112,7 +112,7 @@ public class ParsedActivityImpl extends ParsedMainComponentImpl implements Parse
+         this.softInputMode = other.softInputMode;
+         this.persistableMode = other.persistableMode;
+         this.lockTaskLaunchMode = other.lockTaskLaunchMode;
+-        this.screenOrientation = other.screenOrientation;
++        this.screenOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED; // Hacked
+         this.resizeMode = other.resizeMode;
+         this.maxAspectRatio = other.maxAspectRatio;
+         this.minAspectRatio = other.minAspectRatio;
+@@ -174,7 +174,7 @@ public class ParsedActivityImpl extends ParsedMainComponentImpl implements Parse
+         alias.lockTaskLaunchMode = target.getLockTaskLaunchMode();
+         alias.documentLaunchMode = target.getDocumentLaunchMode();
+         alias.setDescriptionRes(target.getDescriptionRes());
+-        alias.screenOrientation = target.getScreenOrientation();
++        alias.screenOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED; // Hacked
+         alias.taskAffinity = target.getTaskAffinity();
+         alias.theme = target.getTheme();
+         alias.softInputMode = target.getSoftInputMode();
+@@ -337,7 +337,8 @@ public class ParsedActivityImpl extends ParsedMainComponentImpl implements Parse
+         this.softInputMode = in.readInt();
+         this.persistableMode = in.readInt();
+         this.lockTaskLaunchMode = in.readInt();
+-        this.screenOrientation = in.readInt();
++        // this.screenOrientation = in.readInt();
++        in.readInt(); // Stubbed!
+         this.resizeMode = in.readInt();
+         this.maxAspectRatio = (Float) in.readValue(Float.class.getClassLoader());
+         this.minAspectRatio = (Float) in.readValue(Float.class.getClassLoader());
+@@ -422,7 +423,7 @@ public class ParsedActivityImpl extends ParsedMainComponentImpl implements Parse
+         this.softInputMode = softInputMode;
+         this.persistableMode = persistableMode;
+         this.lockTaskLaunchMode = lockTaskLaunchMode;
+-        this.screenOrientation = screenOrientation;
++        this.screenOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED; // Hacked
+         this.resizeMode = resizeMode;
+         this.maxAspectRatio = maxAspectRatio;
+         this.minAspectRatio = minAspectRatio;
+@@ -624,7 +625,7 @@ public class ParsedActivityImpl extends ParsedMainComponentImpl implements Parse
+ 
+     @DataClass.Generated.Member
+     public @NonNull ParsedActivityImpl setScreenOrientation( int value) {
+-        screenOrientation = value;
++        screenOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED; // Hacked
+         return this;
+     }
+ 
 diff --git a/services/core/java/com/android/server/pm/pkg/component/ParsedActivityUtils.java b/services/core/java/com/android/server/pm/pkg/component/ParsedActivityUtils.java
 index bbbf5982acb4..2dcae46171a2 100644
 --- a/services/core/java/com/android/server/pm/pkg/component/ParsedActivityUtils.java
@@ -45,19 +146,32 @@ index bbbf5982acb4..2dcae46171a2 100644
                          .setResizeMode(resizeMode);
  
                  if (sa.hasValue(R.styleable.AndroidManifestActivity_maxAspectRatio)
+diff --git a/services/core/java/com/android/server/pm/pkg/parsing/PackageInfoWithoutStateUtils.java b/services/core/java/com/android/server/pm/pkg/parsing/PackageInfoWithoutStateUtils.java
+index b7fde436c8ea..011226ee1d1d 100644
+--- a/services/core/java/com/android/server/pm/pkg/parsing/PackageInfoWithoutStateUtils.java
++++ b/services/core/java/com/android/server/pm/pkg/parsing/PackageInfoWithoutStateUtils.java
+@@ -535,7 +535,7 @@ public class PackageInfoWithoutStateUtils {
+         ai.softInputMode = a.getSoftInputMode();
+         ai.persistableMode = a.getPersistableMode();
+         ai.lockTaskLaunchMode = a.getLockTaskLaunchMode();
+-        ai.screenOrientation = a.getScreenOrientation();
++        ai.screenOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED;
+         ai.resizeMode = a.getResizeMode();
+         ai.setMaxAspectRatio(a.getMaxAspectRatio());
+         ai.setMinAspectRatio(a.getMinAspectRatio());
 diff --git a/services/core/java/com/android/server/wm/ActivityClientController.java b/services/core/java/com/android/server/wm/ActivityClientController.java
-index 725254513519..61128ac75911 100644
+index 7c9244e39e67..22df94f8cbd9 100644
 --- a/services/core/java/com/android/server/wm/ActivityClientController.java
 +++ b/services/core/java/com/android/server/wm/ActivityClientController.java
-@@ -696,7 +696,7 @@ class ActivityClientController extends IActivityClientController.Stub {
-             synchronized (mGlobalLock) {
-                 final ActivityRecord r = ActivityRecord.isInRootTaskLocked(token);
+@@ -698,7 +698,7 @@ class ActivityClientController extends IActivityClientController.Stub {
                  if (r != null) {
+                     EventLogTags.writeWmSetRequestedOrientation(requestedOrientation,
+                             r.shortComponentName);
 -                    r.setRequestedOrientation(requestedOrientation);
 +                    r.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED); // Stubbed!
                  }
              }
          } finally {
 -- 
-2.39.2
+2.41.0
 

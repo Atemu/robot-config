@@ -17,5 +17,4 @@
   source.dirs."build/soong".postPatch = ''substituteInPlace cc/tidy.go --replace "flags.Tidy = true" "flags.Tidy = false"'';
 
   ccache.enable = true;
-  ccache.directory = "/Volumes/Data/Ccache";
 }

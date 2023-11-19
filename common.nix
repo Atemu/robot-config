@@ -17,4 +17,8 @@
   source.dirs."build/soong".postPatch = ''substituteInPlace cc/tidy.go --replace "flags.Tidy = true" "flags.Tidy = false"'';
 
   ccache.enable = true;
+
+  webview.chromium.enable = false;
+  webview.prebuilt.enable = false;
+  apps.chromium.enable = false;
 }

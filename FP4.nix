@@ -4,5 +4,5 @@
   ];
 
   device = "FP4";
-  androidVersion = 14;
+  androidVersion = 15;
 }
